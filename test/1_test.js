@@ -30,5 +30,26 @@ contract('SLToken',function(accounts){
                 assert.equal(ownerBalance.toNumber(),1000000,"Owner Accounts has 1M as Balance");
             })
         })
+
+        it('transfers token ownership',function(){
+            return SLToken.deployed().then(function(instance){
+                SLTokenInstance=instance;
+                return SLTokenInstance.transfer.call(accounts[1],99999999999999,{from:accounts[0]});
+            }).then(assert.fail).catch(function(error){
+                assert(error.message.indexOf('revert')>0,'error contains revert');
+                return SLTokenInstance.transfer.call(accounts[1],250000,{from:accounts[0]});
+            }).then(function(receipt){
+                assert.equal(receipt,true,'returns success');
+                return SLTokenInstance.transfer(accounts[1],250000,{from:accounts[0]});
+            }).then(function(receipt){
+                assert.equal(receipt.logs.length,1,"triggers one event");
+                return SLTokenInstance.balanceOf(accounts[1]);
+            }).then(function(receiverbalance){
+                assert.equal(receiverbalance.toNumber(),250000,"adds balance to the receiver");
+                return SLTokenInstance.balanceOf(accounts[0]);
+            }).then(function(senderbalance){
+                assert.equal(senderbalance.toNumber(),750000,"deducts balance of sender");
+            })
+        })
     })
 })
