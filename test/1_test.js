@@ -51,5 +51,24 @@ contract('SLToken',function(accounts){
                 assert.equal(senderbalance.toNumber(),750000,"deducts balance of sender");
             })
         })
+
+        it("approves tokens for delegated transfer",function(){
+            return SLToken.deployed().then(function(instance){
+                SLTokenInstance=instance;
+                return SLTokenInstance.approve.call(accounts[1],100);
+            }).then(function(success){
+                assert.equal(success,true,"returns true");
+                return SLTokenInstance.approve(accounts[1],100);
+            }).then(function(receipt){
+                assert.equal(receipt.logs.length,1,"triggers one event");
+                assert.equal(receipt.logs[0].event,"Approval","triggers one event");
+                assert.equal(receipt.logs[0].args._owner,accounts[0],"logs the account the tokens are authorized by");
+                assert.equal(receipt.logs[0].args._spender,accounts[1],"logs the account the tokens are authorized to");
+                assert.equal(receipt.logs[0].args._value,100,"logs the transfer amount");
+                return SLTokenInstance.allowance(accounts[0],accounts[1]);                
+            }).then(function(allowance){
+                assert.equal(allowance.toNumber(),100,"stores the allowance for delegated transfer");
+            })
+        })
     })
 })
