@@ -52,4 +52,24 @@ contract("SLTokenSale",function(accounts){
             assert(error.message.indexOf("revert")>=0,"cannot purchase more tokens than available");
         });
     })
+
+    it("ends Sale",function(){
+        return SLToken.deployed().then(function(instance){
+            tokenInstance=instance;
+            return SLTokenSale.deployed();
+        }).then(function(instance){
+            tokenSaleInstance=instance;
+            return tokenSaleInstance.endSale({from:accounts[2]});
+        }).then(assert.fail).catch(function(error){
+            assert(error.message.indexOf('revert')>=0,"Only the admin could end the sale");
+            return tokenSaleInstance.endSale({from:admin});
+        }).then(function(receipt){
+            return tokenInstance.balanceOf(admin);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(),999990,"returns all unsold dapp tokens to admin")
+            //return tokenSaleInstance.tokenPrice();
+        //}).then(function(price){
+        //    assert.equal(price.toNumber(),0,"reset the value of the token Price");
+        })
+    })
 })

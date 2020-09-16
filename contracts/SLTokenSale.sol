@@ -23,4 +23,11 @@ contract SLTokenSale{
         tokenSold+=_numberOfTokens;
         emit BuyTokens(msg.sender,_numberOfTokens);
     }
+
+    function endSale() public {
+        require(msg.sender == admin); 
+        require(slToken.transfer(admin,slToken.balanceOf(address(this))));
+        selfdestruct(msg.sender);
+
+    }
 }
