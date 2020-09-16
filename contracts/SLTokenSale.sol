@@ -18,6 +18,8 @@ contract SLTokenSale{
     }
     function buyTokens(uint256 _numberOfTokens) public payable{
         require(msg.value == multiply(_numberOfTokens,tokenPrice));
+        require(slToken.balanceOf(address(this)) >= _numberOfTokens);
+        require(slToken.transfer(msg.sender,_numberOfTokens));
         tokenSold+=_numberOfTokens;
         emit BuyTokens(msg.sender,_numberOfTokens);
     }

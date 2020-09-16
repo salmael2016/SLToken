@@ -1,10 +1,13 @@
 const SLTokenSale = artifacts.require("./SLTokenSale.sol");
-
+const SLToken = artifacts.require("./SLToken.sol");
 contract("SLTokenSale",function(accounts){
     var tokenSaleInstance;
+    var tokenInstance;
     var tokPrice = 1000000000000000;
     var numberOfTokens = 10;
     var buyer = accounts[1];
+    var admin = accounts[0];
+    var tokensAvailable = 750000;
     it("Deploys the contract and sets the variables",function(){
         return SLTokenSale.deployed().then(function(instance){
             tokenSaleInstance=instance;
@@ -22,8 +25,16 @@ contract("SLTokenSale",function(accounts){
     })
 
     it("facilitates buy tokens",function(){
-        return SLTokenSale.deployed().then(function(instance){
+        return SLToken.deployed().then(function(instance){
+            tokenInstance=instance;
+            return SLTokenSale.deployed();     
+        }).then(function(instance){
             tokenSaleInstance=instance;
+            return tokenInstance.transfer(tokenSaleInstance.address,tokensAvailable,{from : admin})   
+        }).then(function(receipt){
+            return tokenInstance.balanceOf(tokenSaleInstance.address);
+        }).then(function(balance){
+            assert.equal(balance,tokensAvailable,"has tokens");
             return tokenSaleInstance.buyTokens(numberOfTokens,{from : buyer, value : tokPrice * numberOfTokens});
         }).then(function(receipt){
             assert.equal(receipt.logs.length,1,"Logs one event");
@@ -36,6 +47,9 @@ contract("SLTokenSale",function(accounts){
             return tokenSaleInstance.buyTokens(numberOfTokens,{from : buyer,value : 1});
         }).then(assert.fail).catch(function(error){
             assert(error.message.indexOf("revert")>=0,"msg.value must be equal to the number of tokens to buy multiplied by the token price");
+            return tokenSaleInstance.buyTokens(80000000,{from : buyer, value : tokPrice * numberOfTokens});
+        }).then(assert.fail).catch(function(error){
+            assert(error.message.indexOf("revert")>=0,"cannot purchase more tokens than available");
         });
     })
 })
